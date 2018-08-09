@@ -2,7 +2,7 @@
 
 Converts loopback models with embedded models propertys to $jsonScheme validators
 
-* npm install loopback-mixin-mongo-validate --save
+* npm install loopback-mongo-validate-mixin --save
 
 ## Setup
 
