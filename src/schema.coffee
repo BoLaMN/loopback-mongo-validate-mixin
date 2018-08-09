@@ -2,15 +2,24 @@
 
 module.exports = (app, ctor) ->
 
+  any = [ 'double', 'string', 'object', 'array', 'binData'
+    'undefined', 'objectId', 'bool', 'date', 'null'
+    'regex', 'dbPointer', 'javascript', 'symbol'
+    'javascriptWithScope', 'int', 'timestamp', 'long'
+    'decimal', 'minKey', 'maxKey'
+  ]
+
   getModelInfo = (model) ->
     { models } = app.registry.modelBuilder
 
     coerce = (val) ->
-      switch val
+      switch val.toLowerCase()
         when 'number' then 'int'
         when 'objectid' then 'objectId'
         when 'boolean' then 'bool'
-        else val
+        when 'string' then [ 'string', 'null' ]
+        when 'any' then any
+        else ('' + val).toLowerCase()
 
     formatInfo = (definition) ->
       obj = properties: {}
@@ -52,15 +61,12 @@ module.exports = (app, ctor) ->
                   bsonType: 'object'
                   properties: properties
           else
-            type = [ subtype?.modelName or subtype?.name ]
-
-            obj.properties[key].bsonType = coerce ('' + type).toLowerCase()
-        else if typeof type is 'function'
-          type = type.name
-
-          obj.properties[key].bsonType = coerce ('' + type).toLowerCase()
+            obj.properties[key] =
+              bsonType: 'array'
+              items:
+                bsonType: coerce(subtype?.modelName or subtype?.name)
         else
-          obj.properties[key].bsonType = coerce ('' + type).toLowerCase()
+          obj.properties[key].bsonType = coerce(type.name or type)
 
       for key, value of definition.settings.relations
 
@@ -73,7 +79,7 @@ module.exports = (app, ctor) ->
         if value.property
           key = value.property
 
-        obj.properties[key] = bsonType: coerce type.toLowerCase()
+        obj.properties[key] = bsonType: coerce type
 
         { properties, required } = getModelInfo models[value.model]
 
