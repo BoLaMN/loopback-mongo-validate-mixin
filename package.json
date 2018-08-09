@@ -1,0 +1,23 @@
+{
+  "name": "loopback-mongo-validate-mixin",
+  "version": "1.0.1",
+  "description": "model validation for the mongodb connector",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "coffee --bare --no-header --output dist/ --compile src/"
+  },
+  "author": {
+    "name": "BoLaMN",
+    "url": "https://github.com/BoLaMN"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BoLaMN/loopback-mongo-validate-mixin"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "debug": "^3.1.0",
+    "lodash": "^4.17.10"
+  }
+}
