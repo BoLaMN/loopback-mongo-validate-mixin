@@ -23,11 +23,15 @@ module.exports = (Model, options = {}) ->
 
       validator = { $jsonSchema }
 
-      db.command { collMod, validator, validationLevel, validationAction }
-        .then (res) ->
-          debug 'created %s %o', collMod, validator
-        .catch (e) ->
-          console.error collMod + ' errored', e, validator
+      db.createCollection collMod, (err) ->
+        if err
+          debug 'collection %s already existed', collMod
+
+        db.command { collMod, validator, validationLevel, validationAction }
+          .then (res) ->
+            debug 'created %s %o', collMod, validator
+          .catch (e) ->
+            console.error collMod + ' errored', e, validator
 
       return
     return

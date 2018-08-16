@@ -1,25 +1,22 @@
 { extend } = require 'lodash'
 
-_models = {}
-
 module.exports = (app, ctor) ->
 
   any = [ 'double', 'string', 'object', 'array', 'binData'
     'undefined', 'objectId', 'bool', 'date', 'null'
     'regex', 'dbPointer', 'javascript', 'symbol'
-    'javascriptWithScope', 'int', 'timestamp', 'long'
+    'javascriptWithScope', 'number', 'timestamp', 'long'
     'decimal', 'minKey', 'maxKey'
   ]
 
   getModelInfo = (model) ->
-    if _models[model.modelName]
-      return _models[model.modelName]
-
     { models } = app.registry.modelBuilder
 
     coerce = (val, required = false) ->
+      return val unless typeof val is 'string'
+
       v = switch val.toLowerCase()
-        when 'number' then 'int'
+        when 'number' then 'number'
         when 'objectid' then 'objectId'
         when 'boolean' then 'bool'
         when 'string' then 'string'
@@ -39,12 +36,14 @@ module.exports = (app, ctor) ->
       for key, property of definition.properties
         obj.properties[key] = {}
 
-        { type } = property
+        { type, bsonType } = property
 
         if property.required
           req.push key
 
-        if type.definition
+        if bsonType
+          obj.properties[key].bsonType = coerce(bsonType, property.required)
+        else if type.definition
           name = type?.modelName or type?.name
 
           { properties, required } = getModelInfo models[name]
@@ -69,6 +68,7 @@ module.exports = (app, ctor) ->
             if properties?
               obj.properties[key] =
                 bsonType: 'array'
+                additionalItems: true
                 items:
                   bsonType: 'object'
                   properties: properties
@@ -79,9 +79,11 @@ module.exports = (app, ctor) ->
           else
             obj.properties[key] =
               bsonType: 'array'
+              additionalItems: true
               items:
                 bsonType: coerce(subtype?.modelName or subtype?.name, property.required)
                 additionalProperties: true
+                properties: {}
         else
           obj.properties[key].bsonType = coerce(type.name or type, property.required)
 
@@ -93,7 +95,7 @@ module.exports = (app, ctor) ->
 
         { properties } = getModelInfo models[value.model]
 
-        obj.properties[key] = properties.id
+        obj.properties[key] ?= properties.id
 
 
       if req.length
@@ -110,11 +112,7 @@ module.exports = (app, ctor) ->
 
     properties = formatInfo model.definition
 
-    mdl = extend properties, baseProperties
-
-    _models[model.modelName] = mdl
-
-    mdl
+    extend properties, baseProperties
 
   schema = getModelInfo ctor
   schema.bsonType = 'object'
@@ -131,4 +129,3 @@ module.exports = (app, ctor) ->
     schema.required[idIdx] = '_id'
 
   schema
-

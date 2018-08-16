@@ -1,6 +1,6 @@
 {
   "name": "loopback-mongo-validate-mixin",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "model validation for the mongodb connector",
   "main": "dist/index.js",
   "scripts": {
